@@ -2,6 +2,13 @@
   #include <TheThingsNetwork.h>
   #include <OneWire.h>
   #include <DallasTemperature.h>
+  #include "LowPower.h"
+  
+
+//Innganger
+  #define turbPin A0
+  #define oneWireBus 2
+  #define powerPin 1
 
 //TTU variabler
   //Definerer appEui og appKey fra TTN
@@ -14,10 +21,6 @@
   //Forenkler med å skille mellom loraSerial og debugSerial
   #define loraSerial Serial1
   #define debugSerial Serial
-
-//Innganger
-  #define turbPin A0
-  #define oneWireBus 2
   
 //Objekter
   TheThingsNetwork ttn(loraSerial, debugSerial, freqPlan);
@@ -25,7 +28,9 @@
   DallasTemperature sensors(&oneWire);
 
 void setup() {
+  pinMode(powerPin, OUTPUT);
   Serial.begin(9600);
+  
   //Setter bauderate
   loraSerial.begin(57600);
   debugSerial.begin(9600);
@@ -47,15 +52,17 @@ void setup() {
 
 void loop() {
   byte payload[3];
-  
+
+  digitalWrite(powerPin, HIGH);
   int temp = MeasureTemp();
   int turb = MeasureTurb();
+  digitalWrite(powerPin, LOW);
 
   toByteBuffer(temp, turb, payload);
   
   ttn.sendBytes(payload, sizeof(payload));
 
-  delay(20000);
+  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
 }
 
 int MeasureTemp() {
