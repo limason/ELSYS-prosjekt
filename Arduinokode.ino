@@ -7,10 +7,11 @@
 
 //Innganger
   #define turbPin A0
+  #define pHPin A1
   #define oneWireBus 7
 
 //Globale variabler
-  byte payload[3];
+  byte payload[4];
 
 //TTU variabler
   //Definerer appEui og appKey fra TTN
@@ -54,6 +55,7 @@ void setup() {
 void loop() {
   int temp = MeasureTemp();
   int turb = MeasureTurb();
+  int pH = MeasurepH();
   toByteBuffer(temp, turb, payload);
   ttn.sendBytes(payload, sizeof(payload));
   sleep();
@@ -72,10 +74,17 @@ int MeasureTurb() {
   return turb;
 }
 
+int MeasurepH() {
+  int pH = analogRead(pHPin);
+  pH = map(pH, 0, 1023, 0, 255);
+  return pH;
+}
+
 void toByteBuffer(int temp, int turb, byte *payload) {
   payload[0] = highByte(temp);
   payload[1] = lowByte(temp);
   payload[2] = (byte) turb;
+  payload[3] = (byte) pH;
 }
 
 void sleep() {
