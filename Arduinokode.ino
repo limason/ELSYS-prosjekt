@@ -7,8 +7,10 @@
 
 //Innganger
   #define turbPin A0
-  #define oneWireBus 2
-  #define powerPin 1
+  #define oneWireBus 7
+
+//Globale variabler
+  byte payload[3];
 
 //TTU variabler
   //Definerer appEui og appKey fra TTN
@@ -28,7 +30,6 @@
   DallasTemperature sensors(&oneWire);
 
 void setup() {
-  pinMode(powerPin, OUTPUT);
   Serial.begin(9600);
   
   //Setter bauderate
@@ -51,18 +52,11 @@ void setup() {
 }
 
 void loop() {
-  byte payload[3];
-
-  digitalWrite(powerPin, HIGH);
   int temp = MeasureTemp();
   int turb = MeasureTurb();
-  digitalWrite(powerPin, LOW);
-
   toByteBuffer(temp, turb, payload);
-  
   ttn.sendBytes(payload, sizeof(payload));
-
-  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+  sleep();
 }
 
 int MeasureTemp() {
@@ -82,4 +76,10 @@ void toByteBuffer(int temp, int turb, byte *payload) {
   payload[0] = highByte(temp);
   payload[1] = lowByte(temp);
   payload[2] = (byte) turb;
+}
+
+void sleep() {
+  for (int i = 0; i <= 10; i++) {
+  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+  }
 }
